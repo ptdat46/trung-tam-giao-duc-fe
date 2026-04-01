@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@layer base {
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    #root {
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: 'Montserrat', 'Arial', sans-serif;
+    }
+}
