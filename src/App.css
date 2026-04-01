@@ -1,26 +1,18 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
 
-@layer base {
+.academic-overlay {
+  background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuB0FSP7Ecd-YkghJpe3NtrduE89eQOZjx2Zc4R4uAiON-tMCpZkyjEuuutvlKx4WvV5PEhqtm70CaNIq4CMQCaEZM5cMAzqqquuzioBi1O66GbvxDOR4S_Y5_QkHVzwES4G5Y8lWEE_OzMCjdC2EjW0xARKGSFRppamhtwgYUfbPDKfD8e4cIGa86AGvJTSfTwr4nBFcf2lClxkmZzZyqtVxgoygU5t3eCzrhnHmgRIyLC389ARJF-awz3Hxgxblw2B2IrsV3ItXw);
+  background-size: cover;
+  background-position: center;
+}
 
-    html,
-    body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-    }
-
-    #root {
-        height: 100vh;
-        margin: 0;
-        padding: 0;
-    }
-
-    body {
-        font-family: 'Montserrat', 'Arial', sans-serif;
-    }
+.auth-card-blur {
+  backdrop-filter: blur(20px);
+  background-color: rgba(255, 255, 255, 0.85);
 }

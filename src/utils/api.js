@@ -85,6 +85,26 @@ export const setAuthToken = (token) => {
 export const setAuthRole = (role) => {
     Cookies.set('authRole', role, {
         expires: 7,
-        path: '/', 
+        path: '/',
     });
 }
+
+// Auth API helpers
+export const authApi = {
+    // Login - nhận role để gọi endpoint phù hợp
+    login: (email, password, role) => {
+        return apiClient.post(`/${role}/login`, { email, password });
+    },
+
+    // Logout - gửi kèm token tự động qua interceptor
+    logout: (role) => {
+        return apiClient.post(`/${role}/logout`);
+    },
+
+    // Lấy thông tin user hiện tại
+    me: (role) => {
+        return apiClient.get(`/${role}/me`);
+    },
+};
+
+export default api;
