@@ -137,7 +137,7 @@
     "name":                 "Nguyễn Văn A",       // required, string, max:255
     "email":                "teacher@example.com", // required, email, unique
     "password":             "123456",             // required, min:6
-    "password_confirmation": "123456"              // required, phải trùng password
+    "repassword": "123456"                         // required, phải trùng password
   }
 
   Response 201:
@@ -163,7 +163,7 @@
     "errors": {
       "name":     ["The name field is required."],
       "email":    ["The email has already been taken."],
-      "password": ["The password confirmation does not match."]
+      "repassword": ["The repassword must be same as password."]
     },
     "status": 422
   }
@@ -261,7 +261,7 @@
     "name":                 "Trần Thị B",           // required, string, max:255
     "email":                "student@example.com",  // required, email, unique
     "password":             "123456",              // required, min:6
-    "password_confirmation": "123456"                // required, phải trùng password
+    "repassword": "123456"                         // required, phải trùng password
   }
 
   Response 201:
@@ -441,7 +441,436 @@
 
 
 ================================================================================
-  9. LƯU Ý CHO FE DEV
+  9. ADMIN DASHBOARD
+================================================================================
+
+  BASE: /api/admin/dashboard
+  AUTH: Cần — Bearer Token + role = admin
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/dashboard/stats
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Lấy số liệu tổng quan cho Bento Grid cards
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Dashboard stats retrieved successfully",
+    "data": {
+      "total_users":            1284,       // Tổng số user
+      "user_growth_percent":    12,         // % tăng trưởng user so tháng trước
+      "total_classes":          56,         // Tổng số lớp
+      "total_courses":          12,         // Tổng số khoá học
+      "active_classes_count":   42,         // Số lớp đang ongoing (status=1)
+      "monthly_revenue":        1250000000, // Tổng tiền đã thanh toán tháng này
+      "revenue_target_percent": 85          // % hoàn thành target doanh thu
+    },
+    "status": 200
+  }
+
+  Ghi chú:
+  - user_growth_percent: (user tháng này - user tháng trước) / user tháng trước * 100
+  - monthly_revenue: chỉ tính transactions có status=1 (approved)
+  - revenue_target_percent: monthly_revenue / DASHBOARD_REVENUE_TARGET (default: 1.5 tỷ)
+  - revenue_target có thể điều chỉnh qua .env: DASHBOARD_REVENUE_TARGET=2000000000
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/dashboard/charts
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Dữ liệu biểu đồ tăng trưởng — học sinh & giáo viên
+             theo 6 tháng gần nhất
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Chart data retrieved successfully",
+    "data": [
+      { "month": "Nov", "students": 120, "teachers": 15 },
+      { "month": "Dec", "students": 150, "teachers": 12 },
+      { "month": "Jan", "students": 200, "teachers": 20 },
+      { "month": "Feb", "students": 180, "teachers": 18 },
+      { "month": "Mar", "students": 220, "teachers": 25 },
+      { "month": "Apr", "students": 260, "teachers": 22 }
+    ],
+    "status": 200
+  }
+
+  Ghi chú:
+  - students: số user mới đăng ký có role='student' trong tháng đó
+  - teachers: số user mới đăng ký có role='teacher' trong tháng đó
+  - Mảng trả về 6 phần tử, từ tháng cũ nhất → mới nhất
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/dashboard/student-status
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Thống kê số học viên theo trạng thái đăng ký
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Student status retrieved successfully",
+    "data": {
+      "pending":  12,   // enrollments.status = 2 (đang chờ duyệt)
+      "enrolled": 184,  // enrollments.status = 1 (đã ghi danh)
+      "canceled": 29    // enrollments.status = 0 (đã hủy)
+    },
+    "status": 200
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/dashboard/pending-actions
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Danh sách 5 yêu cầu đăng ký chờ duyệt gần nhất
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Pending actions retrieved successfully",
+    "data": [
+      {
+        "id":           1,
+        "student_name": "Bảo Nam Lê",
+        "course_name":  "IELTS Intensive",
+        "proof_image":  "https://link-anh-chung.jpg",  // nullable
+        "amount":       5000000,                       // nullable
+        "created_at":   "2h ago"
+      },
+      { ... }
+    ],
+    "status": 200
+  }
+
+  Ghi chú:
+  - Trả về tối đa 5 bản ghi, sắp xếp mới nhất trước
+  - proof_image & amount: lấy từ transaction đã approved của user đó
+  - created_at: format "Xh ago" (VD: "2h ago", "5h ago", "1d ago")
+
+  ─────────────────────────────────────────────────────────────
+  ERROR RESPONSES (chung cho tất cả /dashboard/*)
+  ─────────────────────────────────────────────────────────────
+
+  Response 401 (Chưa đăng nhập):
+  {
+    "message": "Unauthenticated.",
+    "status": 401
+  }
+
+  Response 403 (Sai role):
+  {
+    "message": "Unauthorized. You do not have permission to access this resource.",
+    "status": 403
+  }
+
+
+================================================================================
+  10. ADMIN — QUẢN LÝ GIÁO VIÊN
+================================================================================
+
+  BASE: /api/admin/teachers
+  AUTH: Cần — Bearer Token + role = admin
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/teachers
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Danh sách tất cả giáo viên (phân trang)
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Query params:
+  ?page=1           // Trang hiện tại (default: 1)
+  ?per_page=10      // Số bản ghi mỗi trang (default: 10)
+
+  Response 200:
+  {
+    "message": "Teachers retrieved successfully",
+    "data": {
+      "data": [
+        {
+          "id":         2,
+          "name":       "Nguyễn Văn A",
+          "email":      "teacher@example.com",
+          "phone":      "0901234567",
+          "role":       "teacher",
+          "status":     1,
+          "created_at": "2026-04-02T..."
+        },
+        { ... }
+      ],
+      "meta": {
+        "current_page": 1,
+        "total":        24,
+        "per_page":     10,
+        "last_page":    3
+      }
+    },
+    "status": 200
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/teachers/{id}
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Lấy chi tiết một giáo viên
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Teacher retrieved successfully",
+    "data": {
+      "teacher": {
+        "id":         2,
+        "name":       "Nguyễn Văn A",
+        "email":      "teacher@example.com",
+        "phone":      "0901234567",
+        "role":       "teacher",
+        "status":     1,
+        "created_at": "2026-04-02T..."
+      }
+    },
+    "status": 200
+  }
+
+  Response 404:
+  {
+    "message": "No query results for model [User] 999.",
+    "status": 404
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [POST] /api/admin/teachers
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Thêm một hoặc nhiều giáo viên cùng lúc
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Request Body (JSON):
+  {
+    "teachers": [
+      {
+        "name":     "Giáo viên A",        // required, string, max:255
+        "email":    "teacher_a@example.com", // required, email, unique
+        "password": "123456",              // required, min:6
+        "phone":    "0901111111"            // nullable, string, max:20
+      },
+      {
+        "name":     "Giáo viên B",
+        "email":    "teacher_b@example.com",
+        "password": "123456",
+        "phone":    "0902222222"
+      }
+    ]
+  }
+
+  Ghi chú:
+  - teachers là mảng, có thể truyền 1 hoặc nhiều phần tử
+  - Giáo viên mới luôn có status = 1 (hoạt động)
+
+  Response 201:
+  {
+    "message": "Teachers created successfully",
+    "data": {
+      "created_count": 2,
+      "teachers": [
+        {
+          "id":         10,
+          "name":       "Giáo viên A",
+          "email":      "teacher_a@example.com",
+          "phone":      "0901111111",
+          "role":       "teacher",
+          "status":     1,
+          "created_at": "2026-04-02T..."
+        },
+        { ... }
+      ]
+    },
+    "status": 201
+  }
+
+  Response 422 (Validation Error):
+  {
+    "message": "The given data was invalid.",
+    "errors": {
+      "teachers.0.email":   ["Email đã được sử dụng."],
+      "teachers.1.password": ["Mật khẩu phải có ít nhất 6 ký tự."]
+    },
+    "status": 422
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [PUT] /api/admin/teachers/{id}
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Cập nhật thông tin một giáo viên
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Request Body (JSON) — tất cả fields đều nullable:
+  {
+    "name":   "Tên mới",                 // nullable, string, max:255
+    "email":  "new_email@example.com",   // nullable, email, unique
+    "phone":  "0909999999",              // nullable, string, max:20
+    "status": 1                           // nullable, 0=không hoạt động, 1=hoạt động
+  }
+
+  Response 200:
+  {
+    "message": "Teacher updated successfully",
+    "data": {
+      "teacher": {
+        "id":         2,
+        "name":       "Tên mới",
+        "email":      "new_email@example.com",
+        "phone":      "0909999999",
+        "role":       "teacher",
+        "status":     1,
+        "created_at": "2026-04-02T..."
+      }
+    },
+    "status": 200
+  }
+
+  Response 422 (Email trùng):
+  {
+    "message": "The given data was invalid.",
+    "errors": {
+      "email": ["Email đã được sử dụng bởi tài khoản khác."]
+    },
+    "status": 422
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [DELETE] /api/admin/teachers/{id}
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Xóa một giáo viên
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Teacher deleted successfully",
+    "data": [],
+    "status": 200
+  }
+
+  Response 404:
+  {
+    "message": "No query results for model [User] 999.",
+    "status": 404
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [DELETE] /api/admin/teachers
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Xóa nhiều giáo viên cùng lúc
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Request Body (JSON):
+  {
+    "ids": [3, 5, 8]    // required, array, min:1, mỗi phần tử là integer
+  }
+
+  Response 200:
+  {
+    "message": "Teachers deleted successfully",
+    "data": {
+      "deleted_count": 3
+    },
+    "status": 200
+  }
+
+  Response 422 (Validation Error):
+  {
+    "message": "The given data was invalid.",
+    "errors": {
+      "ids": ["The ids field is required."]
+    },
+    "status": 422
+  }
+
+  Response 422 (ID không tồn tại):
+  {
+    "message": "The given data was invalid.",
+    "errors": {
+      "ids.0": ["The selected ids.0 is invalid."]
+    },
+    "status": 422
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/teachers/{id}/classes
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Lấy danh sách lớp học của một giáo viên
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Teacher classes retrieved successfully",
+    "data": {
+      "teacher": {
+        "id":    2,
+        "name":  "Nguyễn Văn A",
+        "email": "teacher@example.com",
+        "phone": "0901234567",
+        "role":  "teacher",
+        "status": 1
+      },
+      "classes": [
+        {
+          "id":             1,
+          "name":           "IELTS Intensive Sáng",
+          "type":           1,
+          "type_label":     "Online",
+          "room_number":    "Phòng A1",
+          "meeting_link":   "https://meet.google.com/abc-defg-hij",
+          "start_date":     "2026-04-01",
+          "end_date":       "2026-06-30",
+          "status":         1,
+          "status_label":   "Đang học",
+          "course": {
+            "id":   1,
+            "name": "IELTS Intensive",
+            "slug": "ielts-intensive"
+          },
+          "total_sessions": 24,
+          "total_students": 18,
+          "created_at":     "2026-04-01T..."
+        },
+        { ... }
+      ]
+    },
+    "status": 200
+  }
+
+  Response 404:
+  {
+    "message": "No query results for model [User] 999.",
+    "status": 404
+  }
+
+  Ghi chú:
+  - type: 0 = Offline, 1 = Online
+  - status: 0 = Sắp mở, 1 = Đang học, 2 = Đã kết thúc, 3 = Đã hủy
+  - total_students: chỉ đếm enrollment có status = 1 (đã ghi danh)
+
+
+================================================================================
+  11. LƯU Ý CHO FE DEV
 ================================================================================
 
   - Tất cả API trả về Content-Type: application/json

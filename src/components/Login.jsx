@@ -19,6 +19,12 @@ const REDIRECT_PATHS = {
   student: '/student/dashboard',
 };
 
+const LOGIN_PATHS = {
+  admin: '/admin/login',
+  teacher: '/teacher/login',
+  student: '/student/login',
+};
+
 export default function Login({ role = 'student' }) {
   const navigate = useNavigate();
   const { login, register } = useAuth();

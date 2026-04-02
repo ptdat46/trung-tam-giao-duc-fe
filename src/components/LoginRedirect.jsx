@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
 const ROLE_DASHBOARD_MAP = {
@@ -15,5 +15,5 @@ export default function LoginRedirect() {
         return <Navigate to={ROLE_DASHBOARD_MAP[role]} replace />;
     }
 
-    return <Outlet />;
+    return <Navigate to="/student/login" replace />;
 }

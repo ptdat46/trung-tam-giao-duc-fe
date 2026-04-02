@@ -1,6 +1,6 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { useEffect } from 'react';
 
 const ROLE_DASHBOARD_MAP = {
     admin: '/admin/dashboard',
@@ -16,7 +16,7 @@ export default function RootRedirect() {
         const role = Cookies.get('authRole');
 
         if (!token || !role) {
-            navigate('/login', { replace: true });
+            navigate('/student/login', { replace: true });
             return;
         }
 
@@ -26,7 +26,7 @@ export default function RootRedirect() {
         } else {
             Cookies.remove('authToken');
             Cookies.remove('authRole');
-            navigate('/login', { replace: true });
+            navigate('/student/login', { replace: true });
         }
     }, [navigate]);
 

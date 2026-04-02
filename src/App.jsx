@@ -1,14 +1,17 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import LoginRedirect from './components/LoginRedirect';
+import LoginGuard from './components/LoginGuard';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminTeachersPage from './pages/AdminTeachersPage';
+import AdminTeacherDetailPage from './pages/AdminTeacherDetailPage';
+import AdminLayout from './components/AdminLayout';
+import TeacherDashboard from './pages/TeacherDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import AdminLoginPage from './pages/AdminLoginPage';
 import TeacherLoginPage from './pages/TeacherLoginPage';
 import StudentLoginPage from './pages/StudentLoginPage';
-import RootRedirect from './components/RootRedirect';
-import LoginRedirect from './components/LoginRedirect';
-import ProtectedRoute from './components/ProtectedRoute';
-import AdminDashboard from './pages/AdminDashboard';
-import TeacherDashboard from './pages/TeacherDashboard';
-import StudentDashboard from './pages/StudentDashboard';
 import './App.css';
 
 function App() {
@@ -16,20 +19,39 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<RootRedirect />} />
+          <Route path="/" element={<LoginRedirect />} />
 
-          <Route path="/login" element={<LoginRedirect />}>
-            <Route index element={<StudentLoginPage />} />
-            <Route path="admin" element={<AdminLoginPage />} />
-            <Route path="teacher" element={<TeacherLoginPage />} />
-            <Route path="student" element={<StudentLoginPage />} />
-          </Route>
+          <Route path="/student/login" element={<LoginGuard><StudentLoginPage /></LoginGuard>} />
+          <Route path="/admin/login" element={<LoginGuard><AdminLoginPage /></LoginGuard>} />
+          <Route path="/teacher/login" element={<LoginGuard><TeacherLoginPage /></LoginGuard>} />
 
           <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <AdminDashboard />
+                <AdminLayout activeItem="Tổng quan">
+                  <AdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/teachers"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout activeItem="Giáo viên">
+                  <AdminTeachersPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/teachers/:id"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout activeItem="Giáo viên">
+                  <AdminTeacherDetailPage />
+                </AdminLayout>
               </ProtectedRoute>
             }
           />
