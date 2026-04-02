@@ -1,5 +1,5 @@
-import LoginPage from './LoginPage';
+import Login from '../components/Login';
 
 export default function TeacherLoginPage() {
-  return <LoginPage role="teacher" />;
+  return <Login role="teacher" />;
 }

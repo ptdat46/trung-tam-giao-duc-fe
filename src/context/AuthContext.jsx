@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
                 };
             }
 
-            const { user: userData, token: authToken } = response.data.data;
+            const { user: userData, token: authToken } = response.data;
 
             // Lưu token và role
             Cookies.set('authToken', authToken, { expires: 7, path: '/' });
@@ -60,6 +60,43 @@ export function AuthProvider({ children }) {
             return {
                 success: false,
                 message: errorResponse.message || 'Đăng nhập thất bại',
+                errors: errorResponse.errors || null,
+                status: errorResponse.status || 422,
+            };
+        }
+    };
+
+    const register = async (name, email, password, password_confirmation, loginRole) => {
+        try {
+            const response = await authApi.register(name, email, password, password_confirmation, loginRole);
+
+            if (!response.success) {
+                return {
+                    success: false,
+                    message: response.error || 'Đăng ký thất bại',
+                    errors: response.data || null,
+                    status: response.status || 422,
+                };
+            }
+
+            const { user: userData, token: authToken } = response.data;
+
+            // Lưu token và role
+            Cookies.set('authToken', authToken, { expires: 7, path: '/' });
+            Cookies.set('authRole', loginRole, { expires: 7, path: '/' });
+            localStorage.setItem('user', JSON.stringify(userData));
+
+            setToken(authToken);
+            setRole(loginRole);
+            setUser(userData);
+            setIsAuthenticated(true);
+
+            return { success: true, user: userData };
+        } catch (error) {
+            const errorResponse = error.response?.data || error;
+            return {
+                success: false,
+                message: errorResponse.message || 'Đăng ký thất bại',
                 errors: errorResponse.errors || null,
                 status: errorResponse.status || 422,
             };
@@ -94,6 +131,7 @@ export function AuthProvider({ children }) {
         isAuthenticated,
         loading,
         login,
+        register,
         logout,
     };
 

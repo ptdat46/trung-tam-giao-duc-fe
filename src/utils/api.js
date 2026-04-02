@@ -96,6 +96,16 @@ export const authApi = {
         return apiClient.post(`/${role}/login`, { email, password });
     },
 
+    // Register - chỉ có teacher và student
+    register: (name, email, password, repassword, role) => {
+        return apiClient.post(`/${role}/register`, {
+            name,
+            email,
+            password,
+            repassword,
+        });
+    },
+
     // Logout - gửi kèm token tự động qua interceptor
     logout: (role) => {
         return apiClient.post(`/${role}/logout`);

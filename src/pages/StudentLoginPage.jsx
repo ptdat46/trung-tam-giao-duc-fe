@@ -1,5 +1,5 @@
-import LoginPage from './LoginPage';
+import Login from '../components/Login';
 
 export default function StudentLoginPage() {
-  return <LoginPage role="student" />;
+  return <Login role="student" />;
 }
