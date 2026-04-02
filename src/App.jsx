@@ -16,10 +16,8 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Root: đọc cookie → redirect theo role hoặc /login */}
           <Route path="/" element={<RootRedirect />} />
 
-          {/* Login: redirect nếu đã login, index = Student login */}
           <Route path="/login" element={<LoginRedirect />}>
             <Route index element={<StudentLoginPage />} />
             <Route path="admin" element={<AdminLoginPage />} />
@@ -27,7 +25,6 @@ function App() {
             <Route path="student" element={<StudentLoginPage />} />
           </Route>
 
-          {/* Protected dashboards */}
           <Route
             path="/admin/dashboard"
             element={

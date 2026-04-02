@@ -11,7 +11,6 @@ export function AuthProvider({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Kiểm tra auth khi app khởi động
     useEffect(() => {
         const savedToken = Cookies.get('authToken');
         const savedRole = Cookies.get('authRole');
@@ -30,8 +29,6 @@ export function AuthProvider({ children }) {
         try {
             const response = await authApi.login(email, password, loginRole);
 
-            // Interceptor trả về { success, data, status } cho cả success và error
-            // Khi lỗi, response.data.data là undefined → cần kiểm tra success trước
             if (!response.success) {
                 return {
                     success: false,
@@ -43,7 +40,6 @@ export function AuthProvider({ children }) {
 
             const { user: userData, token: authToken } = response.data;
 
-            // Lưu token và role
             Cookies.set('authToken', authToken, { expires: 7, path: '/' });
             Cookies.set('authRole', loginRole, { expires: 7, path: '/' });
             localStorage.setItem('user', JSON.stringify(userData));
@@ -55,7 +51,6 @@ export function AuthProvider({ children }) {
 
             return { success: true, user: userData };
         } catch (error) {
-            // Xử lý lỗi từ interceptor
             const errorResponse = error.response?.data || error;
             return {
                 success: false,
@@ -81,7 +76,6 @@ export function AuthProvider({ children }) {
 
             const { user: userData, token: authToken } = response.data;
 
-            // Lưu token và role
             Cookies.set('authToken', authToken, { expires: 7, path: '/' });
             Cookies.set('authRole', loginRole, { expires: 7, path: '/' });
             localStorage.setItem('user', JSON.stringify(userData));
@@ -109,10 +103,8 @@ export function AuthProvider({ children }) {
                 await authApi.logout(role);
             }
         } catch (error) {
-            // Vẫn xóa local data dù API lỗi
             console.error('Logout API error:', error);
         } finally {
-            // Xóa local data
             Cookies.remove('authToken');
             Cookies.remove('authRole');
             localStorage.removeItem('user');

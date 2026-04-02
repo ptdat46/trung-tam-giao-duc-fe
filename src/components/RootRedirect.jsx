@@ -24,7 +24,6 @@ export default function RootRedirect() {
         if (dashboardPath) {
             navigate(dashboardPath, { replace: true });
         } else {
-            // Fallback: xóa cookie không hợp lệ và về login
             Cookies.remove('authToken');
             Cookies.remove('authRole');
             navigate('/login', { replace: true });

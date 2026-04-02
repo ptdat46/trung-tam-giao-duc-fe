@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Map role -> heading title
 const HEADING_TITLES = {
   admin: { title: 'Đăng nhập Quản trị', subtitle: 'Vui lòng đăng nhập để quản lý hệ thống.' },
   teacher: { title: 'Đăng nhập Giáo viên', subtitle: 'Vui lòng đăng nhập để quản lý lớp học.' },
@@ -14,7 +13,6 @@ const REGISTER_HEADING_TITLES = {
   student: { title: 'Đăng ký Học sinh', subtitle: 'Tạo tài khoản để bắt đầu hành trình học tập.' },
 };
 
-// Redirect paths after successful login per role
 const REDIRECT_PATHS = {
   admin: '/admin/dashboard',
   teacher: '/teacher/dashboard',
@@ -26,16 +24,12 @@ export default function Login({ role = 'student' }) {
   const { login, register } = useAuth();
 
   const [activeTab, setActiveTab] = useState('login');
-
-  // Login form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [errors, setErrors] = useState({});
-
-  // Register form state
   const [name, setName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -44,8 +38,6 @@ export default function Login({ role = 'student' }) {
   const heading = HEADING_TITLES[role] || HEADING_TITLES.student;
   const registerHeading = REGISTER_HEADING_TITLES[role];
   const redirectPath = REDIRECT_PATHS[role] || '/';
-
-  // Check if register is available (only for teacher and student)
   const canRegister = role !== 'admin';
 
   const handleLoginSubmit = async (e) => {
@@ -100,13 +92,10 @@ export default function Login({ role = 'student' }) {
 
   return (
     <div className="h-full flex items-center justify-center relative overflow-hidden px-4 py-12">
-      {/* Background Layer */}
       <div className="absolute inset-0 z-0 academic-overlay opacity-10" />
       <div className="absolute inset-0 z-0 bg-gradient-to-tr from-surface-container via-transparent to-primary-fixed-dim opacity-30" />
 
-      {/* Auth Container */}
       <div className="relative z-10 w-full max-w-[1000px] grid md:grid-cols-2 bg-surface-container-lowest shadow-2xl rounded-xl overflow-hidden">
-        {/* Left Side: Visual/Branding */}
         <div className="hidden md:flex flex-col justify-between p-12 bg-primary relative overflow-hidden">
           <div className="absolute inset-0 opacity-20">
             <img
@@ -127,9 +116,7 @@ export default function Login({ role = 'student' }) {
           </div>
         </div>
 
-        {/* Right Side: Form */}
         <div className="p-8 md:p-12 flex flex-col justify-center bg-white">
-          {/* Heading */}
           <div className="mb-8 text-center md:text-left">
             <h2 className="font-headline text-2xl font-bold text-on-surface mb-2">
               {activeTab === 'login' ? heading.title : registerHeading?.title}
@@ -139,7 +126,6 @@ export default function Login({ role = 'student' }) {
             </p>
           </div>
 
-          {/* Tabs - Chỉ hiển thị tab Đăng ký cho teacher và student */}
           {canRegister && (
             <div className="flex p-1 bg-surface-container-low rounded-lg mb-8">
               <button
@@ -167,17 +153,14 @@ export default function Login({ role = 'student' }) {
             </div>
           )}
 
-          {/* Error Alert */}
           {error && (
             <div className="mb-4 p-3 bg-error-container text-on-error-container text-sm rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Login Form */}
           {activeTab === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-5">
-              {/* Email Field */}
               <div className="space-y-1.5">
                 <label className="block font-label text-xs font-semibold text-outline tracking-wider uppercase">
                   Gmail
@@ -204,7 +187,6 @@ export default function Login({ role = 'student' }) {
                 )}
               </div>
 
-              {/* Password Field */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="block font-label text-xs font-semibold text-outline tracking-wider uppercase">
@@ -236,7 +218,6 @@ export default function Login({ role = 'student' }) {
                 )}
               </div>
 
-              {/* Remember Checkbox */}
               <div className="flex items-center">
                 <input
                   className="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary"
@@ -251,7 +232,6 @@ export default function Login({ role = 'student' }) {
                 </label>
               </div>
 
-              {/* Submit Button */}
               <button
                 className={`w-full py-3 bg-gradient-to-r from-primary to-primary-container text-white font-label font-bold rounded-lg shadow-md transition-all ${
                   loading
@@ -266,10 +246,8 @@ export default function Login({ role = 'student' }) {
             </form>
           )}
 
-          {/* Register Form */}
           {activeTab === 'register' && canRegister && (
             <form onSubmit={handleRegisterSubmit} className="space-y-5">
-              {/* Name Field */}
               <div className="space-y-1.5">
                 <label className="block font-label text-xs font-semibold text-outline tracking-wider uppercase">
                   Họ và tên
@@ -296,7 +274,6 @@ export default function Login({ role = 'student' }) {
                 )}
               </div>
 
-              {/* Email Field */}
               <div className="space-y-1.5">
                 <label className="block font-label text-xs font-semibold text-outline tracking-wider uppercase">
                   Gmail
@@ -323,7 +300,6 @@ export default function Login({ role = 'student' }) {
                 )}
               </div>
 
-              {/* Password Field */}
               <div className="space-y-1.5">
                 <label className="block font-label text-xs font-semibold text-outline tracking-wider uppercase">
                   Mật khẩu
@@ -350,7 +326,6 @@ export default function Login({ role = 'student' }) {
                 )}
               </div>
 
-              {/* Confirm Password Field */}
               <div className="space-y-1.5">
                 <label className="block font-label text-xs font-semibold text-outline tracking-wider uppercase">
                   Xác nhận mật khẩu
@@ -377,7 +352,6 @@ export default function Login({ role = 'student' }) {
                 )}
               </div>
 
-              {/* Submit Button */}
               <button
                 className={`w-full py-3 bg-gradient-to-r from-primary to-primary-container text-white font-label font-bold rounded-lg shadow-md transition-all ${
                   loading
