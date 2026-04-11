@@ -5,7 +5,9 @@ import LoginGuard from './components/LoginGuard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminTeachersPage from './pages/AdminTeachersPage';
+import AdminCoursesPage from './pages/AdminCoursesPage';
 import AdminTeacherDetailPage from './pages/AdminTeacherDetailPage';
+import AdminCourseDetailPage from './pages/AdminCourseDetailPage';
 import AdminLayout from './components/AdminLayout';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
@@ -31,6 +33,26 @@ function App() {
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminLayout activeItem="Tổng quan">
                   <AdminDashboard />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/courses"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout activeItem="Khóa học">
+                  <AdminCoursesPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/courses/:id"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout activeItem="Khóa học">
+                  <AdminCourseDetailPage />
                 </AdminLayout>
               </ProtectedRoute>
             }

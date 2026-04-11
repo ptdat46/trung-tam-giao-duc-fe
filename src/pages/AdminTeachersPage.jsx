@@ -9,6 +9,7 @@ export default function AdminTeachersPage() {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     const fetchTeachers = async () => {
         setLoading(true);
@@ -38,6 +39,25 @@ export default function AdminTeachersPage() {
         }
     };
 
+    const handleExportCSV = async () => {
+        setExporting(true);
+        try {
+            const res = await api.download('/admin/teachers/export');
+            const url = URL.createObjectURL(res.data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `teachers_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Lỗi khi xuất CSV', err);
+        } finally {
+            setExporting(false);
+        }
+    };
+
     return (
         <div className="px-8 pt-8 pb-12">
             <div className="flex justify-between items-end mb-8">
@@ -53,8 +73,12 @@ export default function AdminTeachersPage() {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="bg-[#ffffff] text-[#003686] border border-[#c3c6d5]/30 px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#f4f3f4] transition-all flex items-center gap-2">
-                        <span className="material-symbols-outlined text-lg">file_download</span>
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={exporting}
+                        className="bg-[#ffffff] text-[#003686] border border-[#c3c6d5]/30 px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#f4f3f4] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span className="material-symbols-outlined text-lg">{exporting ? 'progress_activity' : 'file_download'}</span>
                         Xuất CSV
                     </button>
                     <button

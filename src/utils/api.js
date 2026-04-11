@@ -62,6 +62,7 @@ export const api = {
         }
         return apiClient.delete(endpoint);
     },
+    download: (endpoint) => apiClient.get(endpoint, { responseType: 'blob' }),
 };
 
 export const setAuthToken = (token) => {
