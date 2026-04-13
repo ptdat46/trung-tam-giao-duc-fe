@@ -8,6 +8,7 @@ import AdminTeachersPage from './pages/AdminTeachersPage';
 import AdminCoursesPage from './pages/AdminCoursesPage';
 import AdminTeacherDetailPage from './pages/AdminTeacherDetailPage';
 import AdminCourseDetailPage from './pages/AdminCourseDetailPage';
+import AdminSchedulingPage from './pages/AdminSchedulingPage';
 import AdminLayout from './components/AdminLayout';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
@@ -53,6 +54,16 @@ function App() {
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminLayout activeItem="Khóa học">
                   <AdminCourseDetailPage />
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/scheduling"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout activeItem="Lịch & Phòng học">
+                  <AdminSchedulingPage />
                 </AdminLayout>
               </ProtectedRoute>
             }

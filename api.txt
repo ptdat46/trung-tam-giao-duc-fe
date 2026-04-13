@@ -1157,7 +1157,313 @@
 
 
 ================================================================================
-  12. LƯU Ý CHO FE DEV
+  12. ADMIN — QUẢN LÝ LỊCH & PHÒNG HỌC (SCHEDULING)
+================================================================================
+
+  BASE: /api/admin/scheduling
+  AUTH: Cần — Bearer Token + role = admin
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/scheduling/rooms
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Danh sách tất cả phòng học kèm trạng thái (được cập
+             nhật tự động bởi Batch Job mỗi 10 phút)
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "...",
+    "data": [
+      {
+        "id":          1,
+        "name":        "P.101",
+        "status":      1,
+        "status_label": "In Use"
+      },
+      { ... }
+    ],
+    "status": 200
+  }
+
+  Ghi chú:
+  - status: 0=Empty, 1=In Use, 2=Maintenance
+  - Batch Job `rooms:update-status` chạy mỗi 10 phút để cập nhật trạng thái
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/scheduling/stats
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Thống kê tỉ lệ lấp đầy phòng học
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Response 200:
+  {
+    "message": "Lấy thống kê phòng học thành công.",
+    "data": {
+      "total_rooms":     10,
+      "in_use":          4,
+      "empty":           6,
+      "maintenance":     0,
+      "occupancy_ratio": 0.4
+    },
+    "status": 200
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/scheduling/calendar
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Lấy lịch học theo tuần (ISO week format)
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Query params:
+  ?week=2026-W15    // ISO week (default: tuần hiện tại)
+
+  Response 200:
+  {
+    "message": "Lấy lịch theo tuần thành công.",
+    "data": {
+      "week": "2026-W15",
+      "sessions": {
+        "2026-04-06": [
+          {
+            "id":           1,
+            "title":        "Buổi 1 - Giới thiệu",
+            "class":        { "id": 1, "name": "IELTS Sáng" },
+            "teacher":      { "id": 2, "name": "Nguyễn Văn A" },
+            "room":         { "id": 1, "name": "P.101" },
+            "session_date": "2026-04-06",
+            "start_time":   "08:00:00",
+            "end_time":     "10:30",
+            "duration":     150,
+            "type":         0,
+            "type_label":   "Regular",
+            "status":       0,
+            "status_label": "Scheduled"
+          }
+        ],
+        "2026-04-07": [ ... ],
+        ...
+      }
+    },
+    "status": 200
+  }
+
+  Ghi chú:
+  - type: 0=Regular, 1=Exam, 2=Practice
+  - status: 0=Scheduled, 1=In Progress, 2=Completed, 3=Cancelled
+  - end_time = start_time + duration (tính bằng phút)
+
+  ─────────────────────────────────────────────────────────────
+  [GET] /api/admin/scheduling/requests
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Danh sách đơn đổi lịch / bổ sung buổi mới
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Query params:
+  ?status=0    // 0=Pending, 1=Approved, 2=Rejected
+
+  Response 200:
+  {
+    "message": "Lấy danh sách yêu cầu đổi lịch thành công.",
+    "data": {
+      "data": [
+        {
+          "id":               1,
+          "user":             { "id": 2, "name": "Nguyễn Văn A" },
+          "session":          { ... },
+          "type":             0,
+          "type_label":       "Change Schedule / Room",
+          "old_room":         { "id": 1, "name": "P.101" },
+          "old_session_date": "2026-04-06",
+          "old_start_time":   "08:00:00",
+          "new_room":         { "id": 2, "name": "P.102" },
+          "new_session_date": "2026-04-07",
+          "new_start_time":   "14:00:00",
+          "new_duration":     120,
+          "reason":           "Trùng lịch họp phòng",
+          "status":           0,
+          "status_label":     "Pending",
+          "reviewer":         null,
+          "reviewed_at":      null,
+          "created_at":       "2026-04-10T..."
+        },
+        { ... }
+      ],
+      "meta": {
+        "current_page": 1,
+        "last_page":    1,
+        "per_page":     20,
+        "total":         3
+      }
+    },
+    "status": 200
+  }
+
+  ─────────────────────────────────────────────────────────────
+  [POST] /api/admin/scheduling/assign
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Gán phòng học cho một buổi học. Tự động kiểm tra
+             xung đột lịch — không cho phép 2 buổi đè nhau.
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Request Body (JSON):
+  {
+    "session_id":   1,              // required, int, tồn tại trong courses_sessions
+    "room_id":      1,              // required, int, tồn tại trong rooms
+    "session_date": "2026-04-15",  // required, date, Y-m-d, không được là ngày quá khứ
+    "start_time":   "08:00",       // required, time, H:i
+    "duration":     90,            // required, int, phút, min:15, max:480
+    "type":         0              // nullable, int, 0=Regular, 1=Exam, 2=Practice
+  }
+
+  Response 201 (Thành công):
+  {
+    "message": "Gán phòng cho buổi học thành công.",
+    "data": {
+      "session": {
+        "id": 1, "title": "...", "room": { "id": 1, "name": "P.101" },
+        "session_date": "2026-04-15", "start_time": "08:00:00",
+        "end_time": "09:30", "duration": 90, ...
+      }
+    },
+    "status": 201
+  }
+
+  Response 409 (Xung đột lịch):
+  {
+    "message": "Phòng P.101 đã được đặt cho buổi \"Buổi 2 - Ngữ pháp\" từ 09:00 đến 11:00.",
+    "status": 409
+  }
+
+  Response 422 (Validation Error):
+  {
+    "message": "Dữ liệu không hợp lệ.",
+    "errors": {
+      "duration": ["Thời lượng tối thiểu là 15 phút."]
+    },
+    "status": 422
+  }
+
+  Ghi chú:
+  - Conflict detection: new_start < existing_end AND new_end > existing_start
+  - Không để trống phòng vào khung giờ đã có buổi khác cùng ngày
+
+  ─────────────────────────────────────────────────────────────
+  [PATCH] /api/admin/scheduling/approve-request/{id}
+  ─────────────────────────────────────────────────────────────
+  Mô tả    : Duyệt hoặc từ chối đơn đổi lịch
+
+  Headers:
+  Authorization: Bearer <token>
+
+  Path params:
+  {id}    // ID của schedule_requests
+
+  Request Body (JSON):
+  {
+    "status": 1    // required, int, 1=Duyệt, 2=Từ chối
+  }
+
+  Response 200 (Duyệt thành công):
+  {
+    "message": "Yêu cầu đổi lịch đã được duyệt và cập nhật vào hệ thống.",
+    "data": {
+      "request": {
+        "id":       1,
+        "status":   1,
+        "reviewer": { "id": 1, "name": "Admin" },
+        "reviewed_at": "2026-04-12T..."
+      },
+      "session": {
+        "id": 1, "title": "...", "room": { "id": 2, "name": "P.102" },
+        "session_date": "2026-04-07", "start_time": "14:00:00",
+        "end_time": "16:00", ...
+      }
+    },
+    "status": 200
+  }
+
+  Response 200 (Từ chối):
+  {
+    "message": "Yêu cầu đổi lịch đã bị từ chối.",
+    "data": {
+      "request": { "id": 1, "status": 2, ... }
+    },
+    "status": 200
+  }
+
+  Response 404:
+  {
+    "message": "Yêu cầu đổi lịch không tồn tại.",
+    "status": 404
+  }
+
+  Response 422 (Đã xử lý rồi):
+  {
+    "message": "Yêu cầu này đã được duyệt.",
+    "status": 422
+  }
+
+  Response 409 (Trùng phòng khi duyệt):
+  {
+    "message": "Phòng P.102 bị trùng lịch vào khung giờ yêu cầu.",
+    "status": 409
+  }
+
+  Ghi chú:
+  - Khi duyệt (status=1): cập nhật trực tiếp vào bảng courses_sessions
+  - TYPE_CHANGE (type=0): cập nhật room_id, session_date, start_time của buổi gốc
+  - TYPE_ADD (type=1): tạo buổi học mới cho lớp tương ứng
+  - Trước khi duyệt, hệ thống kiểm tra lại xung đột phòng
+
+  ─────────────────────────────────────────────────────────────
+  ERROR RESPONSES (chung cho tất cả /scheduling/*)
+  ─────────────────────────────────────────────────────────────
+
+  Response 401 (Chưa đăng nhập):
+  {
+    "message": "Chưa đăng nhập.",
+    "status": 401
+  }
+
+  Response 403 (Sai role):
+  {
+    "message": "Unauthorized. You do not have permission to access this resource.",
+    "status": 403
+  }
+
+
+================================================================================
+  13. BATCH JOB — CẬP NHẬT TRẠNG THÁI PHÒNG TỰ ĐỘNG
+================================================================================
+
+  Command : php artisan rooms:update-status
+  Schedule: Mỗi 10 phút (*/10 * * * *)
+
+  Logic xử lý:
+  1. Reset toàn bộ phòng (trừ status=2 — Maintenance) về 0 (Empty)
+  2. Lấy danh sách courses_sessions có session_date = hôm nay, status = 0 (Scheduled)
+  3. Tính end_time = start_time + duration (phút)
+  4. Nếu now() nằm trong khoảng [start_time, end_time] → cập nhật room.status = 1 (In Use)
+
+  Chạy thủ công:
+  php artisan rooms:update-status
+
+  Kiểm tra scheduler:
+  php artisan schedule:list
+
+
+================================================================================
+  14. LƯU Ý CHO FE DEV
 ================================================================================
 
   - Tất cả API trả về Content-Type: application/json

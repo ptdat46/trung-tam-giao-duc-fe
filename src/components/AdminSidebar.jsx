@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 const navItems = [
     { name: 'Tổng quan', path: '/admin/dashboard', icon: 'dashboard' },
     { name: 'Khóa học', path: '/admin/courses', icon: 'school' },
+    { name: 'Lịch & Phòng học', path: '/admin/scheduling', icon: 'calendar_month' },
     { name: 'Giáo viên', path: '/admin/teachers', icon: 'person_4' },
     { name: 'Học viên', path: '/admin/students', icon: 'group' },
     { name: 'Tài chính', path: '/admin/finance', icon: 'payments' },
